@@ -24,4 +24,21 @@ class CardapioService {
 
     return lista.map((c) => CardapioModel.fromJson(c)).toList();
   }
+
+  static Future<bool> addCardapio(Map<String, dynamic> dados) async {
+  final url = Uri.parse("http://10.0.2.2:8000/api/cardapios");
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${Global.token}",
+      },
+      body: jsonEncode(dados),
+    );
+
+    return response.statusCode == 200;
+  }
+
 }

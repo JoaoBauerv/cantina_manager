@@ -25,9 +25,6 @@ class ReceitaService {
     return receitas.map((r) => ReceitaModel.fromJson(r)).toList();
   }
 
-  // -------------------------------------------
-  //  🔥 ADD RECEITA (POST)
-  // -------------------------------------------
   static Future<bool> addReceita(Map<String, dynamic> data) async {
     final url = Uri.parse("http://10.0.2.2:8000/api/receitas");
 
@@ -45,7 +42,7 @@ class ReceitaService {
     print("BODY: ${response.body}");
 
     // Sucesso (201)
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       return true;
     }
 

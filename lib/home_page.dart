@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/cardapio/cardapio_page.dart';
+import 'package:flutter_application_1/global.dart';
+import 'package:flutter_application_1/login/login_page.dart';
+import 'package:flutter_application_1/login/logout_service.dart';
 import 'package:flutter_application_1/lote/lote_page.dart';
 import 'package:flutter_application_1/produto/produto_page.dart';
+import 'package:flutter_application_1/produto/produto_service.dart';
 import 'package:flutter_application_1/receita/receita_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -40,42 +44,118 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-        centerTitle: false,
         backgroundColor: Colors.blue.shade700,
         elevation: 0,
         toolbarHeight: 80,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              final sucesso = await LogoutService.logout(Global.id_usuario);
+
+              if (sucesso) {
+                Global.token = "";
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Erro ao deslogar.")),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header decorativo
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.blue.shade700,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Gestão de cantina",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
+            // header
+
+            // card dos 5 menores
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: ProdutoService.fetchTopMenorEstoque(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text("Erro ao carregar: ${snapshot.error}"),
+                      ),
+                    );
+                  }
+
+                  final produtos = snapshot.data ?? [];
+
+                  if (produtos.isEmpty) {
+                    return Card(
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text("Nenhum produto encontrado."),
+                      ),
+                    );
+                  }
+
+                  return Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Produtos com menor estoque",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ...produtos.map((p) {
+                            // acesso defensivo aos campos
+                            final nome = (p['nm_produto'] ??  '').toString();
+                            final qtRaw = p['qt_estoque'] ?? p['qtEstoque'] ?? '0';
+                            final qtStr = qtRaw.toString();
+                            final qtParsed = double.tryParse(qtStr.replaceAll(',', '.')) ?? 0.0;
+                            final qtDisplay = qtParsed.toStringAsFixed(2);
+
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(Icons.inventory_2),
+                              title: Text(nome.isNotEmpty ? nome : '—'),
+                              trailing: Text(
+                                qtDisplay,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: qtParsed <= 5 ? Colors.red : Colors.black,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
 
-            // Grid de cards
+            // grid de botões (sem mudança)
             Padding(
               padding: const EdgeInsets.all(20),
               child: GridView.count(
@@ -132,15 +212,6 @@ class HomePage extends StatelessWidget {
                         context,
                         MaterialPageRoute(builder: (_) => const CardapioPage()),
                       );
-                    },
-                  ),
-                  _buildMenuCard(
-                    context,
-                    title: "Calendário",
-                    icon: Icons.calendar_month_outlined,
-                    color: Colors.purple,
-                    onTap: () {
-                      // navegação futura
                     },
                   ),
                 ],

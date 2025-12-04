@@ -43,5 +43,41 @@ class ProdutoService {
 
     return false;
   }
+
+static Future<List<Map<String, dynamic>>> fetchTopMenorEstoque() async {
+  try {
+    final response = await http.get(
+      Uri.parse("http://10.0.2.2:8000/api/relatorios/produtos/top-menor-estoque"),
+      headers: {
+        "Authorization": "Bearer ${Global.token}",
+        "Content-Type": "application/json",
+      },
+    );
+
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+
+      // Verifica se existe a chave "produtos"
+      if (decoded is Map && decoded["produtos"] is List) {
+        final List produtos = decoded["produtos"];
+
+        // Garante que todos os itens são Map<String, dynamic>
+        return produtos.map<Map<String, dynamic>>((item) {
+          if (item is Map<String, dynamic>) return item;
+          return Map<String, dynamic>.from(item);
+        }).toList();
+      }
+
+      return [];
+    }
+
+    throw Exception("Erro ao carregar produtos (${response.statusCode})");
+  } catch (e) {
+    // print("ERRO EM fetchTopMenorEstoque(): $e");
+    return [];
+  }
+}
+
 }
 

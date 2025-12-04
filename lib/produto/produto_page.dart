@@ -181,7 +181,6 @@ class _ProdutosPageState extends State<ProdutosPage> {
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text("Estoque: ${p.quantidadeEstoque.toStringAsFixed(2)}"),
-                  trailing: Text("ID: ${p.idProduto}"),
                 ),
               );
             },

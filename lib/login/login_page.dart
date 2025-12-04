@@ -35,8 +35,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<LoginSubmitted>((event, emit) async {
       emit(LoginLoading());
       try {
-        print(event.user);
-        print(event.pass);
         final url = Uri.parse('http://10.0.2.2:8000/api');
         final response = await http.post(
         url,
@@ -86,7 +84,8 @@ class _LoginPageState extends State<LoginPage> {
             child: BlocConsumer<LoginBloc, LoginState>( listener: (context, state){ 
               if (state is LoginSuccess) { 
                 Global.token = state.data.token;
-
+                Global.id_usuario = state.data.id_usuario;
+                
                 final usuario = state.data.nomeUsuario;
                 final token = state.data.token;
 
